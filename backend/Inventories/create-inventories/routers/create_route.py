@@ -11,7 +11,7 @@ def create_item():
     try:
         data = request.json
         if not data or not all(k in data for k in ("name", "description", "quantity", "price")):
-            return jsonify({"error": "Datos incompletos"}), 400
+            return jsonify({"mistake": "Incomplete data"}), 400
         
         name = data["name"]
         description = data["description"]
@@ -22,7 +22,7 @@ def create_item():
         insert_inventory_item(connection, name, description, quantity, price)
         connection.close()
 
-        return jsonify({"message": "Insumo creado exitosamente"}), 201
+        return jsonify({"message": "Input created successfully"}), 201
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mistake": str(e)}), 500
