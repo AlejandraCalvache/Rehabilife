@@ -3,7 +3,7 @@ from flask_cors import CORS
 from routers.create_route import create_bp
 
 app = Flask(__name__)
-CORS(app)  # Habilita CORS para permitir solicitudes desde otros orígenes
+CORS(app)  # Enable CORS to allow requests from other origins
 
 # Registro de rutas
 app.register_blueprint(create_bp, url_prefix="/create")
