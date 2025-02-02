@@ -5,13 +5,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: Products
- *   description: API to products
- */
-
-/**
- * @swagger
  * components:
  *   schemas:
  *     Product:
@@ -22,41 +15,42 @@ const router = express.Router();
  *       properties:
  *         id:
  *           type: integer
- *           description: ID del product
+ *           description: ID autoincremental del producto
  *         name:
  *           type: string
- *           description: Nombre del product
+ *           description: Nombre del producto
  *         description:
  *           type: string
- *           description: Descripción del product
+ *           description: Descripción del producto
  *         price:
  *           type: number
  *           format: float
- *           description: Precio del product
+ *           description: Precio del producto
  *         mark:
  *           type: string
- *           description: Marca del product
+ *           description: Marca del producto
  *         advert:
  *           type: string
- *           description: Advertencia del product
+ *           description: Advertencias del producto
  *         image_url:
  *           type: string
- *           description: Link de la imagen subida en AWS S3
+ *           description: URL de la imagen del producto
  *       example:
  *         id: 1
- *         name: Pelotas anti-éstres
- *         description: Pelota de gel para el éstres
- *         price: 5.00
- *         mark: Marca A
- *         advert: Mantener lejos de objetos infamables
- *         image_url: Link de la imagen
+ *         name: "Producto de prueba"
+ *         description: "Descripción del producto"
+ *         price: 19.99
+ *         mark: "Marca X"
+ *         advert: "No apto para menores"
+ *         image_url: "https://example.com/image.jpg"
  */
 
 /**
  * @swagger
- * /product:
+ * /products:
  *   post:
- *     summary: Crear un nuevo product
+ *     summary: Crea un nuevo producto
+ *     description: Agrega un nuevo producto a la base de datos.
  *     tags: [Products]
  *     requestBody:
  *       required: true
@@ -66,7 +60,7 @@ const router = express.Router();
  *             $ref: '#/components/schemas/Product'
  *     responses:
  *       201:
- *         description: El product fue creado exitosamente
+ *         description: Producto creado con éxito
  *         content:
  *           application/json:
  *             schema:
