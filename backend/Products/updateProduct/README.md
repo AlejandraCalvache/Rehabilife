@@ -1,7 +1,7 @@
-# Microservice for Create Products
+# Microservice for Update Products
 
 <p>
-This microservice performs the action of creating products in a startup called Rehabilife. It has an interface where it calls this microservice through a defined URL. The microservice performs this action through an endpoint and stores it in a postgres database that is hosted in the cloud. The use of this microservice will depend on the user's role.
+This microservice performs the action of update products in a startup called Rehabilife. It has an interface where it calls this microservice through a defined URL. The microservice performs this action through an endpoint and stores it in a postgres database that is hosted in the cloud. The use of this microservice will depend on the user's role.
 </p>
 
 #### Contributors
@@ -38,7 +38,7 @@ To use the microservice, follow the steps above to install and run the project. 
 </p>
 
 ###### Technologies used for this microservice
-- **Php** for the backend server.
+- **Node JS** for the backend server.
 - **PostgreSQL** for the database.
 - **Swagger** for API documentation.
 - **Docker** for optional containerization.
