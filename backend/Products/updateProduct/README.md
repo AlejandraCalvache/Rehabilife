@@ -10,7 +10,7 @@ This microservice performs the action of update products in a startup called Reh
 
 
 #### How to install and run the project? :wrench:
-The project requires php installed on your system. To install and run the project, follow these steps:
+The project requires Node.js and npm installed on your system. To install and run the project, follow these steps:
 
 ###### Clone the repository:
 
