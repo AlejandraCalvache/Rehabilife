@@ -38,7 +38,7 @@ To use the microservice, follow the steps above to install and run the project. 
 </p>
 
 ###### Technologies used for this microservice
-- **Php** for the backend server.
+- **Node JS** for the backend server.
 - **PostgreSQL** for the database.
 - **Swagger** for API documentation.
 - **Docker** for optional containerization.
