@@ -1,5 +1,5 @@
 const { GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLSchema, GraphQLList, GraphQLNonNull } = require('graphql');
-const Schedule = require('../models/scheduleModel');
+const Schedule = require('../models/schedulesModel');
 
 const ScheduleType = new GraphQLObjectType({
     name: 'Schedule',
