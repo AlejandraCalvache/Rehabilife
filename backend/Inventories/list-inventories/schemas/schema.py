@@ -10,7 +10,7 @@ class InventoryItemType(ObjectType):
     description = String()
     quantity = Int()
     price = Float()
-    created_at = String()  # Puedes usar un custom scalar para DateTime si lo deseas
+    createdAt = String()  # Puedes usar un custom scalar para DateTime si lo deseas
 
 # Consulta raíz de GraphQL
 class Query(ObjectType):
@@ -22,8 +22,8 @@ class Query(ObjectType):
         items = fetch_all_inventory()
         # Convertir la fecha a formato ISO (si es que viene como datetime)
         for item in items:
-            if item.get("created_at") and isinstance(item["created_at"], datetime):
-                item["created_at"] = item["created_at"].isoformat()
+            if item.get("createdAt") and isinstance(item["createdAt"], datetime):
+                item["createdAt"] = item["createdAt"].isoformat()
         return items
 
 # Esquema GraphQL con la consulta definida
