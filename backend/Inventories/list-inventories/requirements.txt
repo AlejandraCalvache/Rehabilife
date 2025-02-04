@@ -1,0 +1,18 @@
+# Dependencias base
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+mysql-connector-python
+python-dotenv
+pyjwt
+
+# Dependencias adicionales si usas Flask en lugar de FastAPI
+flask
+flask-cors
+flask-jwt-extended
+flask-sqlalchemy
+
+flask-graphql
+graphene
+graphene-sqlalchemy
