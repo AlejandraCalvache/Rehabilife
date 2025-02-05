@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 import os
-from models import db, Inventory
+from models.inventory_model import db, Inventory
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
@@ -22,7 +22,7 @@ CORS(app)
 jwt = JWTManager(app)
 
 @app.route("/inventory", methods=["POST"])
-@jwt_required()
+#@jwt_required()#
 def create_inventory():
     try:
         data = request.get_json()
