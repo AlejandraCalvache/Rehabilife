@@ -1,8 +1,12 @@
-def insert_inventory_item(connection, name, description, quantity, price):
-    query = """
-        INSERT INTO inventory (name, description, quantity, price)
-        VALUES (%s, %s, %s, %s)
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, (name, description, quantity, price))
-        connection.commit()
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+class Inventory(db.Model):
+    __tablename__ = "inventories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
