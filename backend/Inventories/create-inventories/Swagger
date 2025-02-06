@@ -1,0 +1,40 @@
+openapi: 3.0.0
+info:
+  title: Create Inventory API
+  description: API para crear insumos en el inventario
+  version: 1.0.0
+paths:
+  /inventory:
+    post:
+      summary: Crear un insumo
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                quantity:
+                  type: integer
+                price:
+                  type: number
+                  format: float
+      responses:
+        "201":
+          description: Insumo creado exitosamente
+        "400":
+          description: Datos inválidos
+        "500":
+          description: Error del servidor
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
