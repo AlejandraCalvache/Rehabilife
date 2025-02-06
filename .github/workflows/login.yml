@@ -1,0 +1,54 @@
+name: Build and Deploy Login Service
+
+on:
+  push:
+    paths:
+      - 'backend/User/login/**'
+    branches:
+      - "Products"
+
+  pull_request:
+    paths:
+      - 'backend/User/login/**'
+    branches:
+      - "QA"
+      - "main"
+
+jobs:
+  build-and-push:
+    name: 📦 Build Docker Image and Push to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clone the repository
+        uses: actions/checkout@v3
+
+      - name: 🐳 Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: 🛠️ Build Docker Image from `backend/User/login`
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest backend/User/login
+          docker tag ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:${{ github.sha }}
+
+      - name: 📤 Upload image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:${{ github.sha }}
+
+  deploy-to-ec2:
+    name: 🚀 Deploy Docker Image on AWS EC2
+    runs-on: ubuntu-latest
+    needs: build-and-push  
+
+    steps:
+      - name: 🔄 Connect to EC2 and deploy the container
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+            docker pull ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
+            docker stop rehabilife-login || true
+            docker rm rehabilife-login || true
+            docker run -d --name rehabilife-login -p 3001:3001 ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
+          EOF
