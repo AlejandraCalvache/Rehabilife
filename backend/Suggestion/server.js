@@ -5,6 +5,8 @@ const connectDB = require('./config/dbConfig');
 const suggestionRoutes = require('./routes/suggestionRoutes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJSDoc = require('swagger-jsdoc');
+require('./mqttSubscriber');
+
 
 const app = express();
 const port = 3022;
