@@ -1,4 +1,5 @@
 const Suggestion = require('../models/suggestionModel');
+const { client, MQTT_TOPIC } = require('../config/mqttClient');
 
 const createSuggestion = async (req, res) => {
   const { suggestion } = req.body;
@@ -9,6 +10,12 @@ const createSuggestion = async (req, res) => {
   try {
     const newSuggestion = new Suggestion({ suggestion });
     const result = await newSuggestion.save();
+    client.publish(MQTT_TOPIC, JSON.stringify(result), { qos: 1 }, (err) => {
+      if (err) {
+        console.error('Error publishing message:', err);
+      }
+    });
+    
     res.status(201).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
