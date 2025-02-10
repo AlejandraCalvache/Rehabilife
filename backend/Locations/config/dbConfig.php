@@ -1,7 +1,7 @@
 <?php
 
 class Conexion {
-    private $cdc = "pgsql:host=postgresql-karenchicaiza.alwaysdata.net;port=5432;dbname=karenchicaiza_db;user=karenchicaiza;password=karenpat020701.";
+    private $cdc = "pgsql:host=postgresql-karenchicaiza.alwaysdata.net;port=5432;dbname=karenchicaiza_dblocations;user=karenchicaiza;password=karenpat020701.";
 
     public function connect() {
         try {
