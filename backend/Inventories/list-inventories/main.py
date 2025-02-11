@@ -1,21 +1,27 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_graphql import GraphQLView
+from flasgger import Swagger
+from dotenv import load_dotenv
 from schemas.schema import schema
+from utils.auth import verify_jwt
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Permite solicitudes CORS desde cualquier origen
+CORS(app)  # Enable CORS
+Swagger(app)  # Enable Swagger UI
 
-# Configuración del endpoint GraphQL en /graphql con la interfaz GraphiQL
+# GraphQL Endpoint with JWT Authentication
 app.add_url_rule(
     '/graphql',
-    view_func=GraphQLView.as_view(
+    view_func=verify_jwt(GraphQLView.as_view(
         'graphql',
         schema=schema,
-        graphiql=True  # Interfaz para pruebas
-    )
+        graphiql=True  # GraphiQL UI enabled
+    ))
 )
 
 if __name__ == '__main__':
-    # Cambiamos el puerto a 5003
     app.run(debug=True, host="0.0.0.0", port=5003)

@@ -1,6 +1,14 @@
-def delete_inventory_item(connection, item_id):
+from utils.db import get_db_connection
+
+def delete_inventory_item(item_id):
+    """Deletes an inventory item securely using SQL parameterization."""
     query = "DELETE FROM inventory WHERE id = %s"
-    with connection.cursor() as cursor:
-        rows_affected = cursor.execute(query, (item_id,))
-        connection.commit()
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(query, (item_id,))
+            connection.commit()
+            rows_affected = cursor.rowcount
         return rows_affected
+    finally:
+        connection.close()

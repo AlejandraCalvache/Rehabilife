@@ -2,9 +2,10 @@ import os
 import pymysql
 from dotenv import load_dotenv
 
-load_dotenv()  # Carga las variables de entorno del archivo .env
+load_dotenv()
 
 def get_db_connection():
+    """Creates and returns a secure database connection using environment variables."""
     return pymysql.connect(
         host=os.getenv("MYSQL_HOST"),
         user=os.getenv("MYSQL_USER"),

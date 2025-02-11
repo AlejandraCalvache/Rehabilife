@@ -1,0 +1,65 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "List Inventory Service",
+      "description": "API to list inventory items using GraphQL",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:5003",
+        "description": "Local server for List-Inventory"
+      }
+    ],
+    "paths": {
+      "/graphql": {
+        "post": {
+          "summary": "Fetch inventory items",
+          "description": "Returns a list of inventory items using GraphQL.",
+          "security": [
+            {
+              "BearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string",
+                      "example": "{ inventory { id name description quantity price created_at } }"
+                    }
+                  },
+                  "required": ["query"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Inventory list fetched successfully"
+            },
+            "401": {
+              "description": "Unauthorized (Invalid or missing token)"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "BearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }
+  
