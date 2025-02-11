@@ -5,10 +5,10 @@ import jwt
 from dotenv import load_dotenv
 
 load_dotenv()
-
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 def verify_jwt(f):
+    """Verifica el token JWT antes de ejecutar una ruta."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get("Authorization")
@@ -23,4 +23,5 @@ def verify_jwt(f):
             return jsonify({"error": "Token inválido"}), 401
 
         return f(*args, **kwargs)
+    
     return decorated_function
