@@ -3,11 +3,13 @@ from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
 from routers.delete_route import delete_bp
+from flasgger import Swagger
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+Swagger(app)
 CORS(app)  # Enable CORS
 
 # Register routes

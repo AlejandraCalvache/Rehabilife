@@ -5,11 +5,13 @@ import os
 from db import db, init_db
 from routers.create_route import create_bp
 from dotenv import load_dotenv
+from flasgger import Swagger
 
 # Cargar variables de entorno
 load_dotenv()
 
 app = Flask(__name__)
+Swagger(app)
 
 # Configuración
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")

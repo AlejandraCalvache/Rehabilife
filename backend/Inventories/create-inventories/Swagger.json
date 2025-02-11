@@ -1,0 +1,98 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Create Inventory Service",
+      "description": "API to create new inventory items",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:5000",
+        "description": "Local server for Create-Inventories"
+      }
+    ],
+    "paths": {
+      "/inventory/create": {
+        "post": {
+          "summary": "Create a new inventory item",
+          "description": "Adds a new item to the rehabilitation inventory",
+          "security": [
+            {
+              "BearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Wheelchair"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Foldable wheelchair with adjustable footrest"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 250.00
+                    }
+                  },
+                  "required": ["name", "description", "quantity", "price"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Item successfully created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "example": "Item added successfully"
+                      },
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid request data"
+            },
+            "401": {
+              "description": "Unauthorized (Invalid or missing token)"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "BearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }
+  
