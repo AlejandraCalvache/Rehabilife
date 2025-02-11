@@ -1,28 +1,18 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import verify_jwt
-from utils.db import get_db_connection
-from models.inventory_model import insert_inventory_item
+from utils.validation import validate_inventory_data
+from services.inventory_service import add_inventory_item
 
 create_bp = Blueprint("create", __name__)
 
-@create_bp.route("/", methods=["POST"])
+@create_bp.route("/create", methods=["POST"])
 @verify_jwt
 def create_item():
-    try:
-        data = request.json
-        if not data or not all(k in data for k in ("name", "description", "quantity", "price")):
-            return jsonify({"mistake": "Incomplete data"}), 400
-        
-        name = data["name"]
-        description = data["description"]
-        quantity = int(data["quantity"])
-        price = float(data["price"])
+    """Crea un nuevo producto en el inventario."""
+    data = request.json
+    valid, error, status = validate_inventory_data(data)
+    if not valid:
+        return jsonify(error), status
 
-        connection = get_db_connection()
-        insert_inventory_item(connection, name, description, quantity, price)
-        connection.close()
-
-        return jsonify({"message": "Input created successfully"}), 201
-
-    except Exception as e:
-        return jsonify({"mistake": str(e)}), 500
+    new_item = add_inventory_item(data["name"], data["description"], data["quantity"], data["price"])
+    return jsonify({"message": "Producto agregado", "id": new_item.id}), 201
