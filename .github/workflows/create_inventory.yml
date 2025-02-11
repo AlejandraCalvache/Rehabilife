@@ -53,3 +53,4 @@ jobs:
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
           EOF
+ 
