@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+             xmlns:tns="http://localhost:3016/paymentService" 
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+             xmlns="http://schemas.xmlsoap.org/wsdl/" 
+             targetNamespace="http://localhost:3016/paymentService" 
+             name="PaymentService">
+
+  <types>
+    <xsd:schema targetNamespace="http://localhost:3016/paymentService">
+      <xsd:element name="listPaymentRequest" type="xsd:anyType"/>
+      <xsd:element name="listPaymentResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="paymentList" type="tns:PaymentArray"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:complexType name="Payment">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:int"/>
+          <xsd:element name="nombre" type="xsd:string"/>
+          <xsd:element name="descripcion" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="PaymentArray">
+        <xsd:sequence>
+          <xsd:element name="Payment" type="tns:Payment" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </types>
+
+  <message name="listPaymentRequest">
+    <part name="parameters" element="tns:listPaymentRequest"/>
+  </message>
+  <message name="listPaymentResponse">
+    <part name="parameters" element="tns:listPaymentResponse"/>
+  </message>
+
+  <portType name="PaymentServicePortType">
+    <operation name="listPayment">
+      <input message="tns:listPaymentRequest"/>
+      <output message="tns:listPaymentResponse"/>
+    </operation>
+  </portType>
+
+  <binding name="PaymentServiceSoapBinding" type="tns:PaymentServicePortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="listPayment">
+      <soap:operation soapAction="http://localhost:3016/paymentService/listPayment"/>
+      <input>
+        <soap:body use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+  </binding>
+
+  <service name="PaymentService">
+    <port name="PaymentServiceSoapPort" binding="tns:PaymentServiceSoapBinding">
+      <soap:address location="http://localhost:3016/wsdl"/>
+    </port>
+  </service>
+
+</definitions>
