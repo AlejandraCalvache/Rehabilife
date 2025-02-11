@@ -1,4 +1,4 @@
-# 🐍 Use official Python image as base
+# 🐍 Use an optimized Python image
 FROM python:3.11-slim
 
 # 🏗 Set environment variables
@@ -25,9 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # 🔄 Expose the port the app runs on
-EXPOSE 5002
+EXPOSE 5003
 
 # 🚀 Start the Flask app
-CMD ["python", "config/app.py"]
-
-
+CMD ["python", "main.py"]
