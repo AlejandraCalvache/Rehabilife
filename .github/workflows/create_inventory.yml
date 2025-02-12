@@ -43,9 +43,14 @@ jobs:
     needs: build-and-push
 
     steps:
+      - name: Save SSH key to file
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: 🔄 Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
             sudo docker stop create-inventory || true
             sudo docker rm create-inventory || true
@@ -53,4 +58,3 @@ jobs:
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
           EOF
- 
