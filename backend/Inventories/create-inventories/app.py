@@ -7,7 +7,7 @@ from routers.create_route import create_bp
 from dotenv import load_dotenv
 from flasgger import Swagger
 
-# Cargar variables de entorno
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)

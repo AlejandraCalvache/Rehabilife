@@ -1,11 +1,11 @@
-name: Build and Deploy Login Service
+name: Build and Deploy login Service
 
 on:
   push:
     paths:
       - 'backend/User/login/**'
     branches:
-      - "Products"
+      - bd_microservices
 
   pull_request:
     paths:
@@ -27,28 +27,28 @@ jobs:
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: 🛠️ Build Docker Image from `backend/User/login`
+      - name: 🛠️ Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest backend/User/login
-          docker tag ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/login:latest backend/User/login
+          docker tag ${{ secrets.DOCKER_USERNAME }}/login:latest ${{ secrets.DOCKER_USERNAME }}/login:${{ github.sha }}
 
       - name: 📤 Upload image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/login:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/login:${{ github.sha }}
 
   deploy-to-ec2:
-    name: 🚀 Deploy Docker Image on AWS EC2
+    name: 🚀 Deploy login Service on AWS EC2
     runs-on: ubuntu-latest
-    needs: build-and-push  
+    needs: build-and-push
 
     steps:
-      - name: 🔄 Connect to EC2 and deploy the container
+      - name: 🔄 Deploy
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
-            docker pull ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
-            docker stop rehabilife-login || true
-            docker rm rehabilife-login || true
-            docker run -d --name rehabilife-login -p 3001:3001 ${{ secrets.DOCKER_USERNAME }}/rehabilife-login:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/login:latest
+            sudo docker stop login || true
+            sudo docker rm login || true
+            sudo docker run -d --name login -p 8092:8092 \
+              ${{ secrets.DOCKER_USERNAME }}/login:latest
           EOF
