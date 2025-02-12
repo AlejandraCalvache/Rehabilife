@@ -1,4 +1,4 @@
-name: Build and Deploy createProduct Service
+name: 🚀 Build and Deploy createProduct Service
 
 on:
   push:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   build-and-push:
-    name: 📦 Build Docker Image and Push to Docker Hub
+    name: 📦 Build and Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
@@ -29,13 +29,20 @@ jobs:
 
       - name: 🛠️ Build Docker Image
         run: |
-          docker build --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} -t ${{ secrets.DOCKER_USERNAME }}/createProduct:latest backend/Products/createProduct
-          docker tag ${{ secrets.DOCKER_USERNAME }}/createProduct:latest ${{ secrets.DOCKER_USERNAME }}/createProduct:${{ github.sha }}
+          docker build \
+            --build-arg DB_USER=${{ secrets.DB_USER }} \
+            --build-arg DB_HOST=${{ secrets.DB_HOST }} \
+            --build-arg DB_DATABASE=${{ secrets.DB_DATABASE }} \
+            --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            --build-arg DB_PORT=${{ secrets.DB_PORT }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/createproduct:latest backend/Products/createProduct
 
-      - name: 📤 Upload image to Docker Hub
+          docker tag ${{ secrets.DOCKER_USERNAME }}/createproduct:latest ${{ secrets.DOCKER_USERNAME }}/createproduct:${{ github.sha }}
+
+      - name: 📤 Push Docker Image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/createProduct:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/createProduct:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/createproduct:${{ github.sha }}
 
   deploy-to-ec2:
     name: 🚀 Deploy createProduct Service on AWS EC2
@@ -43,13 +50,24 @@ jobs:
     needs: build-and-push
 
     steps:
-      - name: 🔄 Deploy
+      - name: 🔄 Deploy on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/createProduct:latest
-            sudo docker stop createProduct || true
-            sudo docker rm createProduct || true
-            sudo docker run -d --name createProduct -p 8084:8084 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              ${{ secrets.DOCKER_USERNAME }}/createProduct:latest
+            echo "📡 Pulling latest Docker image..."
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
+
+            echo "🛑 Stopping and removing old container..."
+            sudo docker stop createproduct || true
+            sudo docker rm createproduct || true
+
+            echo "🚀 Running the new container..."
+            sudo docker run -d --name createproduct -p 3006:3006 \
+              -e DB_USER=${{ secrets.DB_USER }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_PORT=${{ secrets.DB_PORT }} \
+              ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
+
+            echo "✅ Deployment successful!"
           EOF
