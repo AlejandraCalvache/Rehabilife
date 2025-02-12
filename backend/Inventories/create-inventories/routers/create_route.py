@@ -8,7 +8,7 @@ create_bp = Blueprint("create", __name__)
 @create_bp.route("/create", methods=["POST"])
 @verify_jwt
 def create_item():
-    """Create a new product in the inventory."""
+    """Create a new product in the inventory"""
     data = request.json
     valid, error, status = validate_inventory_data(data)
     if not valid:

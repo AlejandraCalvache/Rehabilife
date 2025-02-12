@@ -3,9 +3,11 @@ name: 🚀 Deploy Category Create Service to AWS (MySQL)
 on:
   push:
     paths:
-      - 'Backend_uceShoes/productManagement/productCreation/Category/createCategory/**'
+      - 'Backend/Inventories/create-inventories/**'
     branches:
       - main
+      - qa
+      - bd_microservices
 
 jobs:
   build-and-push:
