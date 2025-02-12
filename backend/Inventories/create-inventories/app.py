@@ -21,7 +21,7 @@ init_db(app)
 CORS(app)  # Enable CORS app-wide
 jwt = JWTManager(app)
 
-# Registrar Blueprint
+# Registration Blueprint
 app.register_blueprint(create_bp, url_prefix="/inventory")
 
 if __name__ == "__main__":
