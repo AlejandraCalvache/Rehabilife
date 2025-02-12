@@ -20,7 +20,7 @@ def verify_jwt(f):
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token expired"}), 401
         except jwt.InvalidTokenError:
-            return jsonify({"error": "Token inválido"}), 401
+            return jsonify({"error": "Invalid token"}), 401
 
         return f(*args, **kwargs)
     
