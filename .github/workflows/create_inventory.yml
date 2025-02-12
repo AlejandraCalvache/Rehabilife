@@ -5,7 +5,7 @@ on:
     paths:
       - 'backend/Inventories/create-inventories/**'
     branches:
-      - Yamel_inventory
+      - bd_microservices
 
   pull_request:
     paths:
