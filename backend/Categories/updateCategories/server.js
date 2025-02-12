@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swaggerConfig');
-const categoriesRoutes = require('./routes/categoriesRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 const cors = require('cors');
 
 const app = express();
@@ -17,7 +17,7 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json());
-app.use('/api', categoriesRoutes);
+app.use('/api', categoryRoutes);
 app.use('/swaggerUpdateCategories', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(port, () => {
