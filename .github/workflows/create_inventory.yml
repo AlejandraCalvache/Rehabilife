@@ -13,16 +13,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Realiza el checkout del repositorio
       - name: 🛠️ Checkout repository
         uses: actions/checkout@v4
 
+      # Configura Docker Buildx
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Log in a Docker Hub
       - name: 🔐 Log in to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      # Build y push de la imagen de Docker
       - name: 📦 Build and push Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest \
@@ -37,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Conecta al servidor AWS EC2 y despliega la imagen
       - name: Connect to AWS EC2 and Deploy
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -44,26 +49,26 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 🔧 Update packages and install Docker if not present
+            # 🔧 Actualiza paquetes e instala Docker si no está instalado
             sudo yum update -y
             sudo yum install -y docker
             sudo systemctl start docker
             sudo systemctl enable docker
 
-            # 🔧 Ensure the user has permissions to run Docker without sudo
+            # 🔧 Asegura que el usuario tenga permisos para ejecutar Docker sin sudo
             sudo usermod -aG docker $USER
             newgrp docker
 
-            # 🛑 Stop the previous container if running
+            # 🛑 Detén el contenedor anterior si está corriendo
             sudo docker stop create-inventory || true
 
-            # 🗑️ Remove the previous container to avoid conflicts
+            # 🗑️ Elimina el contenedor anterior para evitar conflictos
             sudo docker rm create-inventory || true
 
-            # 🐳 Pull the latest Docker image
+            # 🐳 Pullear la última imagen de Docker
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
 
-            # 🚀 Run the new container with environment variables
+            # 🚀 Ejecuta el nuevo contenedor con las variables de entorno necesarias
             sudo docker run -d \
               --name create-inventory \
               -p 5000:5000 \
@@ -71,5 +76,6 @@ jobs:
               -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
               -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
               -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
+              -e DB_DIALECT=${{ secrets.DB_DIALECT }} \
               -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
               ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
