@@ -12,30 +12,22 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
-    env:
-      ACTIONS_STEP_DEBUG: true
-
     steps:
-      # Realiza el checkout del repositorio
       - name: 🛠️ Checkout repository
         uses: actions/checkout@v4
 
-      # Configura Docker Buildx
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Log in a Docker Hub
       - name: 🔐 Log in to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Build y push de la imagen de Docker
       - name: 📦 Build and push Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest \
             -f backend/Inventories/create-inventories/Dockerfile \
             backend/Inventories/create-inventories
-
           docker push ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
 
   deploy:
@@ -43,11 +35,20 @@ jobs:
     needs: build-and-deploy
     runs-on: ubuntu-latest
 
-    env:
-      ACTIONS_STEP_DEBUG: true
-
     steps:
-      # Conecta al servidor AWS EC2 y despliega la imagen
+      - name: 🔐 Log in to Docker Hub on EC2
+        run: |
+          sudo docker logout
+          echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: 🛠️ Debug Environment Variables
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}"
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}"
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}"
+
       - name: Connect to AWS EC2 and Deploy
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -55,26 +56,20 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 🔧 Actualiza paquetes e instala Docker si no está instalado
             sudo yum update -y
             sudo yum install -y docker
             sudo systemctl start docker
             sudo systemctl enable docker
-
-            # 🔧 Asegura que el usuario tenga permisos para ejecutar Docker sin sudo
             sudo usermod -aG docker $USER
-            newgrp docker
 
-            # 🛑 Detén el contenedor anterior si está corriendo
+            # 🛑 Detén y elimina el contenedor anterior
             sudo docker stop create-inventory || true
-
-            # 🗑️ Elimina el contenedor anterior para evitar conflictos
             sudo docker rm create-inventory || true
 
             # 🐳 Pullear la última imagen de Docker
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
 
-            # 🚀 Ejecuta el nuevo contenedor con las variables de entorno necesarias
+            # 🚀 Ejecuta el nuevo contenedor
             sudo docker run -d \
               --name create-inventory \
               -p 5000:5000 \

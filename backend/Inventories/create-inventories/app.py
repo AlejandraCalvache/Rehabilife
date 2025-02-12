@@ -16,7 +16,7 @@ Swagger(app)
 # Configuration
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
-# Inicializar extensiones
+# Initialize extensions
 init_db(app)
 CORS(app)  # Habilitar CORS en toda la aplicación
 jwt = JWTManager(app)
