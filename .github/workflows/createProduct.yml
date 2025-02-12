@@ -50,9 +50,14 @@ jobs:
     needs: build-and-push
 
     steps:
+      - name: 📥 Create SSH Key File
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
       - name: 🔄 Deploy on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
             echo "📡 Pulling latest Docker image..."
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
 
