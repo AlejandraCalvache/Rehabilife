@@ -42,12 +42,12 @@ jobs:
     steps:
     - name: 🔑 Set permissions for private key
       run: |
-        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > key.pem
-        chmod 600 key.pem
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > proyectof.pem
+        chmod 600 proyectof.pem
 
     - name: 🚀 Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i proyectof.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
         # 1) Actualizar el sistema e instalar Docker si es necesario
         sudo yum update -y
         if ! command -v docker &> /dev/null

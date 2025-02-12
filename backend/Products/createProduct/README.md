@@ -6,7 +6,7 @@ This microservice performs the action of creating products in a startup called R
 
 #### Contributors
 - Alejandra Mishell Calvache Ortiz
-- Karen Chicaiza Aguirre
+- Karen Patricia Chicaiza Aguirre
 
 
 #### How to install and run the project? :wrench:
