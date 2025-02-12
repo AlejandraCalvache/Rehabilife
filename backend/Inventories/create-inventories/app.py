@@ -18,7 +18,7 @@ app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
 # Initialize extensions
 init_db(app)
-CORS(app)  # Habilitar CORS en toda la aplicación
+CORS(app)  # Enable CORS app-wide
 jwt = JWTManager(app)
 
 # Registrar Blueprint
