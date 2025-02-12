@@ -8,7 +8,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 def verify_jwt(f):
-    """Verifica el token JWT antes de ejecutar una ruta."""
+    """verifies the JWT token before executing a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get("Authorization")
