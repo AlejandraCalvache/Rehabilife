@@ -1,4 +1,4 @@
-name: 🚀 Deploy Category Create Service to AWS (MySQL)
+name: 🚀 Deploy Create Inventory Service to AWS (MySQL)
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       - name: 🛠️ Checkout repository
         uses: actions/checkout@v4
 
-      # 🔧 Configurar Docker Buildx para una mejor optimización
+      # 🔧 Configurar Docker Buildx
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -33,12 +33,12 @@ jobs:
       # 📦 Construir y subir la imagen de Docker
       - name: 📦 Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/category-create:latest \
-            --build-arg PORT=${{ secrets.SERVER_PORT_CREATE_CATEGORY }} \
-            -f Backend_uceShoes/productManagement/productCreation/Category/createCategory/Dockerfile \
-            Backend_uceShoes/productManagement/productCreation/Category/createCategory
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/inventory-create:latest \
+            --build-arg PORT=${{ secrets.SERVER_PORT_CREATE_INVENTORY }} \
+            -f Backend/Inventories/create-inventories/Dockerfile \
+            Backend/Inventories/create-inventories
 
-          docker push ${{ secrets.DOCKER_USERNAME }}/category-create:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/inventory-create:latest
 
   deploy:
     name: 🚀 Deploy to AWS EC2
@@ -50,7 +50,7 @@ jobs:
       - name: Connect to AWS EC2 and Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_CREATE_CATEGORY }}
+          host: ${{ secrets.EC2_HOST_CREATE_INVENTORY }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
@@ -62,14 +62,14 @@ jobs:
             sudo systemctl enable docker
 
             echo "🛑 Stopping and removing existing container"
-            sudo docker stop category-create || true
-            sudo docker rm category-create || true
+            sudo docker stop inventory-create || true
+            sudo docker rm inventory-create || true
 
             echo "🗑️ Cleaning unused Docker images"
             sudo docker system prune -f
 
             echo "🐳 Pulling latest Docker image"
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/category-create:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/inventory-create:latest
 
             # ✅ Instalar netcat (nc) antes de verificar la conexión a MySQL
             if ! command -v nc &> /dev/null; then
@@ -84,7 +84,7 @@ jobs:
             fi
 
             echo "🔍 Verifying environment variables:"
-            echo "PORT=${{ secrets.SERVER_PORT_CREATE_CATEGORY }}"
+            echo "PORT=${{ secrets.SERVER_PORT_CREATE_INVENTORY }}"
             echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}"
             echo "MYSQL_USER=${{ secrets.MYSQL_USER }}"
             echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
@@ -93,22 +93,22 @@ jobs:
 
             echo "🚀 Running the new container..."
             sudo docker run -d \
-              --name category-create \
-              -p ${{ secrets.SERVER_PORT_CREATE_CATEGORY }}:${{ secrets.SERVER_PORT_CREATE_CATEGORY }} \
-              -e PORT=${{ secrets.SERVER_PORT_CREATE_CATEGORY }} \
+              --name inventory-create \
+              -p ${{ secrets.SERVER_PORT_CREATE_INVENTORY }}:${{ secrets.SERVER_PORT_CREATE_INVENTORY }} \
+              -e PORT=${{ secrets.SERVER_PORT_CREATE_INVENTORY }} \
               -e MYSQL_HOST=${{ secrets.MYSQL_HOST }} \
               -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
               -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
               -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
               -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-              ${{ secrets.DOCKER_USERNAME }}/category-create:latest
+              ${{ secrets.DOCKER_USERNAME }}/inventory-create:latest
 
             echo "🔍 Verifying deployment..."
-            if [ "$(sudo docker ps -q -f name=category-create)" ]; then
-              echo "✅ Deployment successful: Category Create Service is running."
+            if [ "$(sudo docker ps -q -f name=inventory-create)" ]; then
+              echo "✅ Deployment successful: Create Inventory Service is running."
             else
               echo "❌ Deployment failed: Checking logs..."
-              sudo docker logs category-create > deployment_logs.txt
+              sudo docker logs inventory-create > deployment_logs.txt
               cat deployment_logs.txt
               echo "⚠️ Checking Docker container status..."
               sudo docker ps -a
