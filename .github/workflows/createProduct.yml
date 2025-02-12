@@ -1,78 +1,80 @@
-name: 🚀 Build and Deploy createProduct Service
+name: Build, Push, and Deploy Create Product
 
 on:
   push:
+    branches: [ "bd_microservices" ]
     paths:
-      - 'backend/Products/createProduct/**'
-    branches:
-      - bd_microservices
+      - "backend/Products/createProduct/**"
 
   pull_request:
-    paths:
-      - 'backend/Products/createProduct/**'
     branches:
       - "QA"
       - "main"
+    paths:
+      - "backend/Products/createProduct/**"
 
 jobs:
   build-and-push:
-    name: 📦 Build and Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Clone the repository
-        uses: actions/checkout@v3
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v3
 
-      - name: 🐳 Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+    - name: 🔐 Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 🛠️ Build Docker Image
-        run: |
-          docker build \
-            --build-arg DB_USER=${{ secrets.DB_USER }} \
-            --build-arg DB_HOST=${{ secrets.DB_HOST }} \
-            --build-arg DB_DATABASE=${{ secrets.DB_DATABASE }} \
-            --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            --build-arg DB_PORT=${{ secrets.DB_PORT }} \
-            -t ${{ secrets.DOCKER_USERNAME }}/createproduct:latest backend/Products/createProduct
+    - name: 🛠️ Build and Push Docker Image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/create-product:latest \
+          -f backend/Products/createProduct/Dockerfile \
+          backend/Products/createProduct/
 
-          docker tag ${{ secrets.DOCKER_USERNAME }}/createproduct:latest ${{ secrets.DOCKER_USERNAME }}/createproduct:${{ github.sha }}
-
-      - name: 📤 Push Docker Image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/createproduct:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/create-product:latest
 
   deploy-to-ec2:
-    name: 🚀 Deploy createProduct Service on AWS EC2
-    runs-on: ubuntu-latest
     needs: build-and-push
+    runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Create SSH Key File
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
+    - name: 🔑 Set permissions for private key
+      run: |
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > key.pem
+        chmod 600 key.pem
 
-      - name: 🔄 Deploy on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            echo "📡 Pulling latest Docker image..."
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
+    - name: 🚀 Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+        # 1) Actualizar el sistema e instalar Docker si es necesario
+        sudo yum update -y
+        if ! command -v docker &> /dev/null
+        then
+          echo "Docker no encontrado, instalando..."
+          sudo yum install -y docker
+          sudo systemctl start docker
+          sudo systemctl enable docker
+        fi
 
-            echo "🛑 Stopping and removing old container..."
-            sudo docker stop createproduct || true
-            sudo docker rm createproduct || true
+        # 2) Detener y eliminar contenedor previo
+        sudo docker stop create-product-container || true
+        sudo docker rm create-product-container || true
 
-            echo "🚀 Running the new container..."
-            sudo docker run -d --name createproduct -p 3006:3006 \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_PORT=${{ secrets.DB_PORT }} \
-              ${{ secrets.DOCKER_USERNAME }}/createproduct:latest
+        # 3) Descargar la nueva imagen desde Docker Hub
+        sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create-product:latest
 
-            echo "✅ Deployment successful!"
-          EOF
+        # 4) Ejecutar el contenedor con variables de entorno
+        sudo docker run -d \
+          -e DB_USER=postgres \
+          -e DB_HOST=database-2.c9o0sgyu0pu7.us-east-1.rds.amazonaws.com \
+          -e DB_DATABASE=products \
+          -e DB_PASSWORD=postgres.14 \
+          -e DB_PORT=5432 \
+          -p 3006:3006 \
+          --name create-product-container ${{ secrets.DOCKER_USERNAME }}/create-product:latest
+
+        # 5) Limpiar imágenes antiguas
+        sudo docker image prune -f
+        EOF
