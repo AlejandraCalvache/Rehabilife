@@ -5,7 +5,7 @@ on:
     paths:
       - 'backend/Categories/createCategories/**'
     branches:
-      - Yamel_inventory
+      - bd_microservices
 
   pull_request:
     paths:
