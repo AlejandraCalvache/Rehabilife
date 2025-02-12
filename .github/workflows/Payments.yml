@@ -67,6 +67,12 @@ jobs:
             echo "📥 Pulling the latest Docker image..."
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/payments-service:latest
 
+            # ✅ Instalar netcat (nc) antes de verificar la conexión a la base de datos
+            if ! command -v nc &> /dev/null; then
+              echo "📦 Installing netcat (nc)..."
+              sudo yum install -y nc
+            fi
+
             echo "🔍 Verifying database connection before running the container..."
             if ! nc -zv ${{ secrets.DB_HOST }} ${{ secrets.DB_PORT }}; then
               echo "❌ Database connection failed. Deployment aborted."
