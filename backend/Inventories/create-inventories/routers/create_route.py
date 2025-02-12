@@ -15,4 +15,4 @@ def create_item():
         return jsonify(error), status
 
     new_item = add_inventory_item(data["name"], data["description"], data["quantity"], data["price"])
-    return jsonify({"message": "Producto agregado", "id": new_item.id}), 201
+    return jsonify({"message": "Product", "id": new_item.id}), 201

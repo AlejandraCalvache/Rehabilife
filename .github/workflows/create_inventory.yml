@@ -43,6 +43,10 @@ jobs:
     needs: build-and-push
 
     steps:
+      - name: Create .ssh directory if it doesn't exist
+        run: |
+          mkdir -p ~/.ssh
+
       - name: Save SSH key to file
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
