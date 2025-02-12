@@ -78,7 +78,7 @@ jobs:
             fi
 
             echo "🔍 Verifying database connection before running the container..."
-            if ! nc -zv ${{ secrets.MYSQL_HOST }} 3306; then
+            if ! nc -zv ${{ secrets.MYSQL_HOST }} 5000; then
               echo "❌ Database connection failed. Deployment aborted."
               exit 1
             fi

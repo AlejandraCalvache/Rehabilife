@@ -13,7 +13,7 @@ def verify_jwt(f):
     def decorated_function(*args, **kwargs):
         token = request.headers.get("Authorization")
         if not token:
-            return jsonify({"error": "Token not provided"}), 401
+            return jsonify({"error": "Token not provided."}), 401
 
         try:
             jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
