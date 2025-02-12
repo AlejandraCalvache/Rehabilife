@@ -13,7 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 Swagger(app)
 
-# Configuración
+# Configuration
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
 # Inicializar extensiones

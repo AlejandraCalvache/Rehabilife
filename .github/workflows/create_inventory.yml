@@ -12,6 +12,9 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
+    env:
+      ACTIONS_STEP_DEBUG: true
+
     steps:
       # Realiza el checkout del repositorio
       - name: 🛠️ Checkout repository
@@ -39,6 +42,9 @@ jobs:
     name: Deploy to AWS EC2
     needs: build-and-deploy
     runs-on: ubuntu-latest
+
+    env:
+      ACTIONS_STEP_DEBUG: true
 
     steps:
       # Conecta al servidor AWS EC2 y despliega la imagen
@@ -76,6 +82,5 @@ jobs:
               -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
               -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
               -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
-              -e DB_DIALECT=${{ secrets.DB_DIALECT }} \
               -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
               ${{ secrets.DOCKER_USERNAME }}/create-inventory:latest
