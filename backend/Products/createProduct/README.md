@@ -5,7 +5,7 @@ This microservice performs the action of creating products in a startup called R
 </p>
 
 #### Contributors
-- Alejandra Mishell Calvache Ortiz
+- Alejandra Mishell Calvache
 - Karen Patricia Chicaiza Aguirre
 
 
