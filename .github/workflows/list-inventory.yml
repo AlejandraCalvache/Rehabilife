@@ -1,55 +1,81 @@
-name: Build and Deploy List-Inventory Service
+name: Build, Push, and Deploy List Inventory
 
 on:
   push:
+    branches: ["bd_microservices"]
     paths:
-      - 'backend/Inventories/list-inventory/**'
-    branches:
-      - Yamel_inventory
+      - "backend/Inventories/list-inventory/**"
 
   pull_request:
-    paths:
-      - 'backend/Inventories/list-inventory/**'
     branches:
       - "QA"
       - "main"
+    paths:
+      - "backend/Inventories/list-inventory/**"
 
 jobs:
   build-and-push:
-    name: 📦 Build Docker Image and Push to Docker Hub
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Clone the repository
+      - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🐳 Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 🛠️ Build Docker Image
+      - name: 🛠️ Build and Push Docker Image
         run: |
-          docker build --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} -t ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest backend/Inventories/list-inventory
-          docker tag ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest ${{ secrets.DOCKER_USERNAME }}/list-inventory:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest \
+            --file backend/Inventories/list-inventory/Dockerfile \
+            --build-arg MYSQL_USER=${{ secrets.MYSQL_USER }} \
+            --build-arg MYQL_HOST=${{ secrets.MYQL_HOST }} \
+            --build-arg MYSQL_DB=${{ secrets.MYSQL_DB }} \
+            --build-arg MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+            backend/Inventories/list-inventory/
 
-      - name: 📤 Upload image to Docker Hub
-        run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/list-inventory:${{ github.sha }}
 
   deploy-to-ec2:
-    name: 🚀 Deploy on AWS EC2
-    runs-on: ubuntu-latest
     needs: build-and-push
+    runs-on: ubuntu-latest
 
     steps:
-      - name: 🔄 Deploy
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+      - name: 🚀 Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST_LIST_INVENTORY }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1) Update the system and install Docker if necessary
+            sudo yum update -y
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing..."
+              sudo yum install -y docker
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
+
+            # 2) Stop and remove the previous container
+            sudo docker stop list-inventory-container || true
+            sudo docker rm list-inventory-container || true
+
+            # 3) Pull the latest image from Docker Hub
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest
-            sudo docker stop list-inventory || true
-            sudo docker rm list-inventory || true
-            sudo docker run -d --name list-inventory -p 5003:5003 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest
-          EOF
+
+            # 4) Run the container with environment variables
+            sudo docker run -d \
+              -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
+              -e MYQL_HOST=${{ secrets.MYQL_HOST }} \
+              -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
+              -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+              -p 5003:5003 \
+              --name list-inventory-container ${{ secrets.DOCKER_USERNAME }}/list-inventory:latest
+
+            # 5) Clean up old images
+            sudo docker image prune -f

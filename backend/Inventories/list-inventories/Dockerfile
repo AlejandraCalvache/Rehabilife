@@ -17,7 +17,14 @@ RUN apt-get update && apt-get install -y \
 
 # 📥 Copy only requirements first (for better caching)
 COPY requirements.txt .
-
+ARG MYSQL_USER
+ARG MYQL_HOST
+ARG MYSQL_DB
+ARG MYSQL_PASSWORD
+ENV MYSQL_USER=${MYSQL_USER}
+ENV MYQL_HOST=${MYQL_HOST}
+ENV MYSQL_DB=${MYSQL_DB}
+ENV MYSQL_PASSWORD=${MYSQL_PASSWORD}
 # 📦 Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
