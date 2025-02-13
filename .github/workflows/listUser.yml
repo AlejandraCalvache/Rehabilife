@@ -76,7 +76,7 @@ jobs:
               -e DB_DATABASE=${{ secrets.DB_DATABASELO }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e DB_PORT=${{ secrets.BD_PORT }} \
-              -p 3015:3015 \
+              -p 3005:3005 \
               --name list-user-container ${{ secrets.DOCKER_USERNAME }}/list-user:latest
 
             # 5) Clean up old images
