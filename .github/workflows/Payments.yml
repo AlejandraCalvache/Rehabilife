@@ -1,112 +1,83 @@
-name: 🚀 Deploy Payments Service to AWS
+name: Build, Push, and Deploy Payments
 
 on:
   push:
+    branches: ["bd_microservices"]
     paths:
-      - 'backend/Payments/**'
+      - "backend/Payments/**"
+
+  pull_request:
     branches:
-      - main
-      - QA
-      - bd_microservices
+      - "QA"
+      - "main"
+    paths:
+      - "backend/Payments/**"
 
 jobs:
   build-and-push:
-    name: 📦 Build and Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛠️ Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 🔧 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
 
       - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🛠️ Build and Push Docker Image
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/payments:latest \
+            --file backend/Payments/Dockerfile \
+            --build-arg BD_USER=${{ secrets.BD_USER }} \
+            --build-arg BD_HOST=${{ secrets.BD_HOST }} \
+            --build-arg BD_DATABASE=${{ secrets.BD_DATABASEPAY }} \
+            --build-arg BD_PASSWORD=${{ secrets.BD_PASSWORD }} \
+            --build-arg BD_PORT=${{ secrets.BD_PORT }} \
+            backend/Payments/
 
-      - name: 📦 Build and push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/payments-service:latest \
-            --build-arg PORT=${{ secrets.PAYMENTS_PORT }} \
-            -f backend/Payments/Dockerfile \
-            backend/Payments
+          docker push ${{ secrets.DOCKER_USERNAME }}/payments:latest
 
-          docker push ${{ secrets.DOCKER_USERNAME }}/payments-service:latest
-
-  deploy:
-    name: 🚀 Deploy to EC2
-    runs-on: ubuntu-latest
+  deploy-to-ec2:
     needs: build-and-push
+    runs-on: ubuntu-latest
 
     steps:
-      - name: 🚀 Connect to EC2 and Deploy Payments Service
-        uses: appleboy/ssh-action@v1.0.3
+      - name: 🚀 Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.EC2_HOST_PAYMENTS }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            echo "🔍 Checking if Docker is installed..."
+            # 1) Update the system and install Docker if necessary
+            sudo yum update -y
             if ! command -v docker &> /dev/null; then
-              echo "📦 Installing Docker..."
-              sudo yum update -y
+              echo "Docker not found, installing..."
               sudo yum install -y docker
               sudo systemctl start docker
-              sudo usermod -aG docker $USER
+              sudo systemctl enable docker
             fi
 
-            echo "🛑 Stopping and removing previous container..."
-            sudo docker stop payments-service || true
-            sudo docker rm payments-service || true
+            # 2) Stop and remove the previous container
+            sudo docker stop payments-container || true
+            sudo docker rm payments-container || true
 
-            echo "🧹 Removing old Docker images..."
-            sudo docker image prune -af
+            # 3) Pull the latest image from Docker Hub
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/payments:latest
 
-            echo "📥 Pulling the latest Docker image..."
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/payments-service:latest
-
-            # ✅ Instalar netcat (nc) antes de verificar la conexión a la base de datos
-            if ! command -v nc &> /dev/null; then
-              echo "📦 Installing netcat (nc)..."
-              sudo yum install -y nc
-            fi
-
-            echo "🔍 Verifying database connection before running the container..."
-            if ! nc -zv ${{ secrets.DB_HOST }} ${{ secrets.DB_PORT }}; then
-              echo "❌ Database connection failed. Deployment aborted."
-              exit 1
-            fi
-
-            echo "🔍 Verifying environment variables:"
-            echo "PORT=${{ secrets.PAYMENTS_PORT }}"
-            echo "DB_HOST=${{ secrets.DB_HOST }}"
-            echo "DB_PORT=${{ secrets.DB_PORT }}"
-            echo "DB_USER=${{ secrets.DB_USER }}"
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
-            echo "DB_DATABASE=${{ secrets.DB_DATABASE }}"
-
-            echo "🚀 Running the new container..."
+            # 4) Run the container with environment variables
             sudo docker run -d \
-              --name payments-service \
-              -p ${{ secrets.PAYMENTS_PORT }}:${{ secrets.PAYMENTS_PORT }} \
-              -e PORT=${{ secrets.PAYMENTS_PORT }} \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_PORT=${{ secrets.DB_PORT }} \
               -e DB_USER=${{ secrets.DB_USER }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_DATABASE=${{ secrets.DB_DATABASEPAY }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
-              ${{ secrets.DOCKER_USERNAME }}/payments-service:latest
+              -e DB_PORT=${{ secrets.BD_PORT }} \
+              -p 3016:3016 \
+              --name payments-container ${{ secrets.DOCKER_USERNAME }}/payments:latest
 
-            echo "🔍 Verifying deployment..."
-            if [ "$(sudo docker ps -q -f name=payments-service)" ]; then
-              echo "✅ Deployment successful: Payments Service is running."
-            else
-              echo "❌ Deployment failed: Checking logs..."
-              sudo docker logs payments-service > deployment_logs.txt
-              cat deployment_logs.txt
-              echo "⚠️ Checking Docker container status..."
-              sudo docker ps -a
-              exit 1
-            fi
+            # 5) Clean up old images
+            sudo docker image prune -f
